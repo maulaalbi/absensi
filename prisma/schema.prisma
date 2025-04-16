@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  password    String
+  role        Role         @default(USER)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attendances Attendance[]
+}
+
+model Attendance {
+  id               Int             @id @default(autoincrement())
+  userId           Int
+  globalScheduleId Int
+  timestamp        DateTime        @default(now())
+  status           AttendanceStatus
+  user             User            @relation(fields: [userId], references: [id])
+  globalSchedule   GlobalSchedule  @relation(fields: [globalScheduleId], references: [id])
+}
+
+model GlobalSchedule {
+  id         Int          @id @default(autoincrement())
+  day        String       // Contoh: "Monday", "Tuesday"
+  startTime  DateTime
+  endTime    DateTime
+  barcode    String       @unique // Ini yang dipakai untuk absensi
+  location   String?      // Misal: "Ruang A", opsional
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  attendances Attendance[]
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  LATE
+  ABSENT
+  EXCUSED
+}
