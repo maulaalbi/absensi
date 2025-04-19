@@ -15,6 +15,7 @@ datasource db {
 
 model User {
   id          Int          @id @default(autoincrement())
+  user_public_id  String @unique @default(uuid())
   name        String
   email       String       @unique
   password    String
@@ -26,19 +27,36 @@ model User {
 
 model Attendance {
   id               Int             @id @default(autoincrement())
-  userId           Int
-  globalScheduleId Int
+  userId           String
+  globalScheduleId String
+  user             User            @relation(fields: [userId], references: [user_public_id])
+  globalSchedule   GlobalSchedule  @relation(fields: [globalScheduleId], references: [barcode])
+  checkIns         CheckIn[]
+  checkOuts        CheckOut[]
+}
+
+model CheckIn {
+  id               Int             @id @default(autoincrement())
+  attendanceId     Int
+  barcode          String          // Barcode untuk check-in
   timestamp        DateTime        @default(now())
-  status           AttendanceStatus
-  user             User            @relation(fields: [userId], references: [id])
-  globalSchedule   GlobalSchedule  @relation(fields: [globalScheduleId], references: [id])
+  status           String?
+  attendance       Attendance      @relation(fields: [attendanceId], references: [id])
+}
+
+model CheckOut {
+  id               Int             @id @default(autoincrement())
+  attendanceId     Int
+  barcode          String          // Barcode untuk check-out
+  timestamp        DateTime        @default(now())
+  status           String?
+  attendance       Attendance      @relation(fields: [attendanceId], references: [id])
 }
 
 model GlobalSchedule {
   id         Int          @id @default(autoincrement())
   day        String       // Contoh: "Monday", "Tuesday"
   startTime  DateTime
-  endTime    DateTime
   barcode    String       @unique // Ini yang dipakai untuk absensi
   location   String?      // Misal: "Ruang A", opsional
   createdAt  DateTime     @default(now())
@@ -51,9 +69,4 @@ enum Role {
   USER
 }
 
-enum AttendanceStatus {
-  PRESENT
-  LATE
-  ABSENT
-  EXCUSED
-}
+
