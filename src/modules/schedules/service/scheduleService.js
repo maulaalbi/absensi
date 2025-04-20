@@ -52,7 +52,6 @@ const register = async (body) => {
     select: {
       day: true,
       startTime: true,
-      endTime: true,
       barcode: true
     }
   });
@@ -70,7 +69,6 @@ const getScheduleAll = async (body)=>{
         select : {
             day :true,
             startTime :true,
-            endTime :true,
             barcode :true
         }
     })

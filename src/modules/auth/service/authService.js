@@ -107,7 +107,8 @@ const getAllUser = async ()=>{
     const user = await prismaClient.user.findMany({
         select : {
             email :true,
-            name: true
+            name: true,
+            role : true
         }
     })
 
