@@ -29,8 +29,8 @@ const register = async (body,userData) => {
     })
     
 
-    const resultAttendance = await prismaClient.attendance.create({
-        data: {
+    const resultAttendance = await prismaClient.attendance.findFirst({
+        where: {
             globalScheduleId : globalSchedule.barcode,
             userId : user.user_public_id
         },
@@ -41,8 +41,8 @@ const register = async (body,userData) => {
         }
     })
     
-  
-    const checkIn = await prismaClient.checkIn.create({
+    
+    const checkOut = await prismaClient.checkOut.create({
         data : {
             attendanceId : resultAttendance.id,
             barcode : resultAttendance.globalScheduleId
@@ -53,19 +53,17 @@ const register = async (body,userData) => {
         }
     })
 
-    if (dayjs(checkIn.timestamp).isAfter(dayjs(globalSchedule.startTime))) {
-        await prismaClient.checkIn.update({
-          where: {
-            id: checkIn.id
-          },
-          data: {
-            status: "LATE",
-          },
-        })
-      }
+    const updateStatus = await prismaClient.checkOut.update({
+        where :{
+            id : checkOut.id
+        },
+        data:{
+            status : "Left Office"
+        }
+    })
 
       logger.info(
-            `[Service - register] Success register attendance Check In with this data ${JSON.stringify(resultAttendance)} and check in ${JSON.stringify(checkIn)}`
+            `[Service - register] Success register attendance Check Out with this data ${JSON.stringify(resultAttendance)} and check in ${JSON.stringify(checkOut)}`
         )
 
     return resultAttendance;
@@ -75,29 +73,16 @@ const register = async (body,userData) => {
 const attAll = async (body)=>{
     const result = await prismaClient.attendance.findMany({
         select : {
-            user :{
-                select :{
-                    user_public_id:true,
-                    name:true
-                }
-            },
+            userId : true,
+            globalScheduleId : true,
             globalSchedule : {
-                select :{
-                    sch_public_id:true,
-                    day:true,
-                    startTime:true,
-                    barcode : true
+                select : {
+                    startTime : true
                 }
             },
             checkIns: {
                 select:{
                     timestamp:true,
-                    status : true
-                }
-            },
-            checkOuts : {
-                select :{
-                    timestamp :true,
                     status : true
                 }
             }
@@ -110,33 +95,33 @@ const attAll = async (body)=>{
     return result;
 }
 
-const getCheckInAll = async (body)=>{
-    const result = await prismaClient.checkIn.findMany({
-       select : {
-        timestamp : true,
-        status : true,
-        attendance : {
-            select :{
-                att_public_id : true,
-                globalSchedule:{
-                    select :{
-                        sch_public_id:true,
-                        day:true,
-                        startTime:true,
-                        barcode : true
-                    }
-                },
-                user :{
-                    select :{
-                        user_public_id:true,
-                        name:true
-                    }
-                }
-            }
-        },
-        
-       }
-    })
+const getCheckOutAll = async (body)=>{
+    const result = await prismaClient.checkOut.findMany({
+        select : {
+         timestamp : true,
+         status : true,
+         attendance : {
+             select :{
+                 att_public_id : true,
+                 globalSchedule:{
+                     select :{
+                         sch_public_id:true,
+                         day:true,
+                         startTime:true,
+                         barcode : true
+                     }
+                 },
+                 user :{
+                     select :{
+                         user_public_id:true,
+                         name:true
+                     }
+                 }
+             }
+         },
+         
+        }
+     })
 
     logger.info(
         `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
@@ -147,5 +132,5 @@ const getCheckInAll = async (body)=>{
 export default {
     register,
     attAll,
-    getCheckInAll
+    getCheckOutAll
 }

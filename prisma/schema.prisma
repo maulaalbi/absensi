@@ -27,6 +27,7 @@ model User {
 
 model Attendance {
   id               Int             @id @default(autoincrement())
+  att_public_id    String           @default(uuid())
   userId           String
   globalScheduleId String
   user             User            @relation(fields: [userId], references: [user_public_id])
@@ -55,6 +56,7 @@ model CheckOut {
 
 model GlobalSchedule {
   id         Int          @id @default(autoincrement())
+  sch_public_id    String  @default(uuid())
   day        String       // Contoh: "Monday", "Tuesday"
   startTime  DateTime
   barcode    String       @unique // Ini yang dipakai untuk absensi

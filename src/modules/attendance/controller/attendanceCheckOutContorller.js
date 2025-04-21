@@ -1,11 +1,11 @@
 import { createSuccessResponse } from "../../../helper/successResponse.js"
-import attendanceCheckInService from "../service/attendanceCheckInService.js"
+import attendanceCheckOutService from "../service/attendanceCheckOutService.js"
 
 
 const register = async (req,res,next)=>{
     const user = req.user
     try{
-          const result = await attendanceCheckInService.register(req.body,user)
+          const result = await attendanceCheckOutService.register(req.body,user)
           const successData = createSuccessResponse(result,"Register success")
           res.status(200).json({
             successData
@@ -20,7 +20,7 @@ const register = async (req,res,next)=>{
 
 const getAll = async (req,res,next)=>{
     try{
-          const result = await attendanceCheckInService.attAll()
+          const result = await attendanceCheckOutService.attAll()
           const successData = createSuccessResponse(result,"Register success")
           res.status(200).json({
             successData
@@ -32,10 +32,9 @@ const getAll = async (req,res,next)=>{
         })
       }
 }
-
-const getCheckInAll = async (req,res,next)=>{
+const getCheckOutAll = async (req,res,next)=>{
   try{
-        const result = await attendanceCheckInService.getCheckInAll()
+        const result = await attendanceCheckOutService.getCheckOutAll()
         const successData = createSuccessResponse(result,"Register success")
         res.status(200).json({
           successData
@@ -50,5 +49,5 @@ const getCheckInAll = async (req,res,next)=>{
 export default {
     register,
     getAll,
-    getCheckInAll
+    getCheckOutAll
 }

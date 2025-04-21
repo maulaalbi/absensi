@@ -79,10 +79,9 @@ const login = async (request)=>{
     );
     // Mengembalikan data user dan token
     return {
-      data: {
-        email: user.email,
-        name : user.name
-      },
+      
+      email: user.email,
+      name : user.name,
       token,
     };
 }
