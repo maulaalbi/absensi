@@ -70,30 +70,30 @@ const register = async (body,userData) => {
     
 }
 
-const attAll = async (body)=>{
-    const result = await prismaClient.attendance.findMany({
-        select : {
-            userId : true,
-            globalScheduleId : true,
-            globalSchedule : {
-                select : {
-                    startTime : true
-                }
-            },
-            checkIns: {
-                select:{
-                    timestamp:true,
-                    status : true
-                }
-            }
-        }
-    })
+// const attAll = async (body)=>{
+//     const result = await prismaClient.attendance.findMany({
+//         select : {
+//             userId : true,
+//             globalScheduleId : true,
+//             globalSchedule : {
+//                 select : {
+//                     startTime : true
+//                 }
+//             },
+//             checkIns: {
+//                 select:{
+//                     timestamp:true,
+//                     status : true
+//                 }
+//             }
+//         }
+//     })
 
-    logger.info(
-        `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
-      );
-    return result;
-}
+//     logger.info(
+//         `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
+//       );
+//     return result;
+// }
 
 const getCheckOutAll = async (body)=>{
     const result = await prismaClient.checkOut.findMany({
@@ -131,6 +131,5 @@ const getCheckOutAll = async (body)=>{
 
 export default {
     register,
-    attAll,
     getCheckOutAll
 }

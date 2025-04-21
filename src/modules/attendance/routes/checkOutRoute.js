@@ -7,7 +7,6 @@ import attendanceCheckOutContorller from '../controller/attendanceCheckOutContor
 const router = express.Router();
 
 router.post('/register',authMiddleware , attendanceCheckOutContorller.register );
-router.get('/getAll' , attendanceCheckOutContorller.getAll );
 router.get('/getCheckOut' , attendanceCheckOutContorller.getCheckOutAll );
 
 
