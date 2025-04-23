@@ -30,6 +30,8 @@ model Attendance {
   att_public_id    String           @default(uuid())
   userId           String
   globalScheduleId String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   user             User            @relation(fields: [userId], references: [user_public_id])
   globalSchedule   GlobalSchedule  @relation(fields: [globalScheduleId], references: [barcode])
   checkIns         CheckIn[]
@@ -43,6 +45,8 @@ model CheckIn {
   timestamp        DateTime        @default(now())
   status           String?
   attendance       Attendance      @relation(fields: [attendanceId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model CheckOut {
@@ -52,6 +56,8 @@ model CheckOut {
   timestamp        DateTime        @default(now())
   status           String?
   attendance       Attendance      @relation(fields: [attendanceId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model GlobalSchedule {

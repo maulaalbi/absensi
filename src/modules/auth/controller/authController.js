@@ -59,9 +59,41 @@ const getAlluser = async (req,res,next)=>{
     })
   }
 }
+
+const getLastAtt = async (req,res,next)=>{
+  try{
+    const userData  = req.user;
+    const result = await authService.getLastAtt(userData.id)
+    res.status(200).json({
+      data : result
+    })
+  }catch(e){
+    res.status(e.statusCode || 400).json({
+      status: 'error',
+      message: e.message || 'Terjadi kesalahan',
+    })
+  }
+}
+
+const getAttByUser = async (req,res,next)=>{
+  try{
+    const {user_public_id} = req.params;
+    const result = await authService.getAttByUser(user_public_id)
+    res.status(200).json({
+      data : result
+    })
+  }catch(e){
+    res.status(e.statusCode || 400).json({
+      status: 'error',
+      message: e.message || 'Terjadi kesalahan',
+    })
+  }
+}
 export default {
   register,
   login,
   getMe,
-  getAlluser
+  getAlluser,
+  getLastAtt,
+  getAttByUser
 }
