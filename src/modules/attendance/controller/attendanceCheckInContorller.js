@@ -5,7 +5,7 @@ import attendanceCheckInService from "../service/attendanceCheckInService.js"
 const register = async (req,res,next)=>{
     const user = req.user
     try{
-          const result = await attendanceCheckInService.register(req.body,user)
+          const result = await attendanceCheckInService.register(req.body,user,req)
           const successData = createSuccessResponse(result,"Register success")
           res.status(200).json({
             successData
@@ -21,9 +21,9 @@ const register = async (req,res,next)=>{
 const getAll = async (req,res,next)=>{
     try{
           const result = await attendanceCheckInService.attAll()
-          const successData = createSuccessResponse(result,"Register success")
+          const Data = createSuccessResponse(result,"Register success")
           res.status(200).json({
-            successData
+            Data
           })
       }catch(e){
         res.status(e.statusCode || 400).json({

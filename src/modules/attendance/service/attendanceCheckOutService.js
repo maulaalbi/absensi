@@ -1,11 +1,12 @@
 import dayjs from "dayjs"
 import { prismaClient } from "../../../application/database.js"
 import { logger } from "../../../application/logger.js"
+import requestIp from 'request-ip';
 import { ResponseError } from "../../../error/responseError.js"
 import { registerValidation } from "../validation/attendanceValidation.js"
 
 
-const register = async (body,userData) => {
+const register = async (body,userData,req) => {
     const attendance = registerValidation.parse(body)
     const user = await prismaClient.user.findUnique({
         where: {
@@ -28,6 +29,10 @@ const register = async (body,userData) => {
         }
     })
     
+     const clientIp = requestIp.getClientIp(req); // Mendapatkan IP pengguna dari request
+        if (!clientIp) {
+            throw new Error('Unable to get client IP');
+        }
 
     const resultAttendance = await prismaClient.attendance.findFirst({
         where: {
@@ -45,10 +50,13 @@ const register = async (body,userData) => {
     const checkOut = await prismaClient.checkOut.create({
         data : {
             attendanceId : resultAttendance.id,
-            barcode : resultAttendance.globalScheduleId
+            barcode : resultAttendance.globalScheduleId,
+            ip : clientIp
+
         },
         select :{
             id:true,
+            ip:true,
             timestamp : true
         }
     })
@@ -98,6 +106,7 @@ const register = async (body,userData) => {
 const getCheckOutAll = async (body)=>{
     const result = await prismaClient.checkOut.findMany({
         select : {
+         ip : true,
          timestamp : true,
          status : true,
          attendance : {

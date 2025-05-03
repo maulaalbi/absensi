@@ -1,11 +1,12 @@
 import dayjs from "dayjs"
 import { prismaClient } from "../../../application/database.js"
 import { logger } from "../../../application/logger.js"
+import requestIp from 'request-ip';
 import { ResponseError } from "../../../error/responseError.js"
 import { registerValidation } from "../validation/attendanceValidation.js"
 
 
-const register = async (body,userData) => {
+const register = async (body,userData,req) => {
     const attendance = registerValidation.parse(body)
     const user = await prismaClient.user.findUnique({
         where: {
@@ -28,6 +29,10 @@ const register = async (body,userData) => {
         }
     })
     
+    const clientIp = requestIp.getClientIp(req); // Mendapatkan IP pengguna dari request
+    if (!clientIp) {
+        throw new Error('Unable to get client IP');
+    }
 
     const resultAttendance = await prismaClient.attendance.create({
         data: {
@@ -45,10 +50,12 @@ const register = async (body,userData) => {
     const checkIn = await prismaClient.checkIn.create({
         data : {
             attendanceId : resultAttendance.id,
-            barcode : resultAttendance.globalScheduleId
+            barcode : resultAttendance.globalScheduleId,
+            ip : clientIp
         },
         select :{
             id:true,
+            ip : true,
             timestamp : true
         }
     })
@@ -92,12 +99,14 @@ const attAll = async (body)=>{
             checkIns: {
                 select:{
                     timestamp:true,
+                    ip: true,
                     status : true
                 }
             },
             checkOuts : {
                 select :{
                     timestamp :true,
+                    ip: true,
                     status : true
                 }
             }
@@ -113,6 +122,7 @@ const attAll = async (body)=>{
 const getCheckInAll = async (body)=>{
     const result = await prismaClient.checkIn.findMany({
        select : {
+        ip : true,
         timestamp : true,
         status : true,
         attendance : {

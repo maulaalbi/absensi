@@ -42,6 +42,7 @@ model CheckIn {
   id               Int             @id @default(autoincrement())
   attendanceId     Int
   barcode          String          // Barcode untuk check-in
+  ip               String
   timestamp        DateTime        @default(now())
   status           String?
   attendance       Attendance      @relation(fields: [attendanceId], references: [id])
@@ -53,6 +54,7 @@ model CheckOut {
   id               Int             @id @default(autoincrement())
   attendanceId     Int
   barcode          String          // Barcode untuk check-out
+  ip               String
   timestamp        DateTime        @default(now())
   status           String?
   attendance       Attendance      @relation(fields: [attendanceId], references: [id])
