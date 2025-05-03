@@ -1,11 +1,12 @@
 import dayjs from "dayjs"
 import { prismaClient } from "../../../application/database.js"
 import { logger } from "../../../application/logger.js"
+import requestIp from 'request-ip';
 import { ResponseError } from "../../../error/responseError.js"
 import { registerValidation } from "../validation/attendanceValidation.js"
 
 
-const register = async (body,userData) => {
+const register = async (body,userData,req) => {
     const attendance = registerValidation.parse(body)
     const user = await prismaClient.user.findUnique({
         where: {
@@ -28,6 +29,10 @@ const register = async (body,userData) => {
         }
     })
     
+    const clientIp = requestIp.getClientIp(req); // Mendapatkan IP pengguna dari request
+    if (!clientIp) {
+        throw new Error('Unable to get client IP');
+    }
 
     const resultAttendance = await prismaClient.attendance.create({
         data: {
@@ -41,16 +46,16 @@ const register = async (body,userData) => {
         }
     })
     
-    logger.info(
-        `[Service - result] ${JSON.stringify(resultAttendance.id)}`
-    )
+  
     const checkIn = await prismaClient.checkIn.create({
         data : {
             attendanceId : resultAttendance.id,
-            barcode : resultAttendance.globalScheduleId
+            barcode : resultAttendance.globalScheduleId,
+            ip : clientIp
         },
         select :{
             id:true,
+            ip : true,
             timestamp : true
         }
     })
@@ -77,16 +82,31 @@ const register = async (body,userData) => {
 const attAll = async (body)=>{
     const result = await prismaClient.attendance.findMany({
         select : {
-            userId : true,
-            globalScheduleId : true,
+            user :{
+                select :{
+                    user_public_id:true,
+                    name:true
+                }
+            },
             globalSchedule : {
-                select : {
-                    startTime : true
+                select :{
+                    sch_public_id:true,
+                    day:true,
+                    startTime:true,
+                    barcode : true
                 }
             },
             checkIns: {
                 select:{
                     timestamp:true,
+                    ip: true,
+                    status : true
+                }
+            },
+            checkOuts : {
+                select :{
+                    timestamp :true,
+                    ip: true,
                     status : true
                 }
             }
@@ -99,7 +119,43 @@ const attAll = async (body)=>{
     return result;
 }
 
+const getCheckInAll = async (body)=>{
+    const result = await prismaClient.checkIn.findMany({
+       select : {
+        ip : true,
+        timestamp : true,
+        status : true,
+        attendance : {
+            select :{
+                att_public_id : true,
+                globalSchedule:{
+                    select :{
+                        sch_public_id:true,
+                        day:true,
+                        startTime:true,
+                        barcode : true
+                    }
+                },
+                user :{
+                    select :{
+                        user_public_id:true,
+                        name:true
+                    }
+                }
+            }
+        },
+        
+       }
+    })
+
+    logger.info(
+        `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
+      );
+    return result;
+}
+
 export default {
     register,
-    attAll
+    attAll,
+    getCheckInAll
 }

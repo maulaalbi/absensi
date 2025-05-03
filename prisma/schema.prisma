@@ -27,8 +27,11 @@ model User {
 
 model Attendance {
   id               Int             @id @default(autoincrement())
+  att_public_id    String           @default(uuid())
   userId           String
   globalScheduleId String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   user             User            @relation(fields: [userId], references: [user_public_id])
   globalSchedule   GlobalSchedule  @relation(fields: [globalScheduleId], references: [barcode])
   checkIns         CheckIn[]
@@ -39,22 +42,29 @@ model CheckIn {
   id               Int             @id @default(autoincrement())
   attendanceId     Int
   barcode          String          // Barcode untuk check-in
+  ip               String
   timestamp        DateTime        @default(now())
   status           String?
   attendance       Attendance      @relation(fields: [attendanceId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model CheckOut {
   id               Int             @id @default(autoincrement())
   attendanceId     Int
   barcode          String          // Barcode untuk check-out
+  ip               String
   timestamp        DateTime        @default(now())
   status           String?
   attendance       Attendance      @relation(fields: [attendanceId], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model GlobalSchedule {
   id         Int          @id @default(autoincrement())
+  sch_public_id    String  @default(uuid())
   day        String       // Contoh: "Monday", "Tuesday"
   startTime  DateTime
   barcode    String       @unique // Ini yang dipakai untuk absensi

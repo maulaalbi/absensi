@@ -79,10 +79,9 @@ const login = async (request)=>{
     );
     // Mengembalikan data user dan token
     return {
-      data: {
-        email: user.email,
-        name : user.name
-      },
+      
+      email: user.email,
+      name : user.name,
       token,
     };
 }
@@ -103,6 +102,54 @@ const getMe = async (id) =>{
     return user;
 }
 
+const getLastAtt = async (user)=>{
+    const lastAtt = await prismaClient.attendance.findFirst({
+        where : {
+            userId : user.user_public_id
+        },
+        orderBy :{
+            createdAt :'desc'
+        },
+        select : {
+            att_public_id : true,
+            user :{
+                select :{
+                    user_public_id:true,
+                    name:true
+                }   
+            },
+            globalSchedule :{
+                select : {
+                    sch_public_id :true,
+                    day:true,
+                    startTime:true,
+                    barcode :true,
+                    createdAt:true
+                }
+            },
+            checkIns :{
+                select:{
+                    timestamp:true,
+                    status:true,
+                    createdAt:true
+                }
+            },
+            checkOuts :{
+                select:{
+                    timestamp:true,
+                    status:true,
+                    createdAt:true
+                }
+            },
+            createdAt: true
+        }
+    })
+
+    return lastAtt;
+}
+
+
+
 const getAllUser = async ()=>{
     const user = await prismaClient.user.findMany({
         select : {
@@ -115,9 +162,66 @@ const getAllUser = async ()=>{
     return user;
 }
 
+const getAttByUser = async (user)=>{
+    const result = await prismaClient.attendance.findMany({
+        where:{
+            userId : user
+        },
+        select : {
+            att_public_id : true,
+            user:{
+                select :{
+                    user_public_id:true,
+                    name:true
+                }
+            },
+            globalSchedule :{
+                select : {
+                    sch_public_id :true,
+                    day:true,
+                    startTime:true,
+                    barcode :true,
+                    createdAt:true
+                }
+            },
+            checkIns :{
+                select:{
+                    timestamp:true,
+                    status:true,
+                    createdAt:true
+                }
+            },
+            checkOuts :{
+                select:{
+                    timestamp:true,
+                    status:true,
+                    createdAt:true
+                }
+            },
+            createdAt: true
+        }
+    })
+
+    return result;
+}
+
+
+
 export default {
     register,
     login,
     getMe,
-    getAllUser
+    getAllUser,
+    getLastAtt,
+    getAttByUser
 }
+
+// const lastAbsensi = await prisma.absensi.findFirst({
+//     where: {
+//       userId: someUserId,
+//     },
+//     orderBy: {
+//       createdAt: 'desc',
+//     },
+//   });
+  
