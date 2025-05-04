@@ -69,7 +69,8 @@ const getScheduleAll = async (body)=>{
         select : {
             day :true,
             startTime :true,
-            barcode :true
+            barcode :true,
+            ip :true
         }
     })
 

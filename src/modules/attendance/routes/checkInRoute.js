@@ -9,6 +9,7 @@ const router = express.Router();
 router.post('/register',authMiddleware , attendanceCheckInContorller.register );
 router.get('/getAll' , attendanceCheckInContorller.getAll );
 router.get('/getCheckIn' , attendanceCheckInContorller.getCheckInAll );
+router.get('/getCheckInToday' , attendanceCheckInContorller.getCheckInToday );
 
 
 export default router;

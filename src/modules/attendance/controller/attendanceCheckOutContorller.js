@@ -5,7 +5,7 @@ import attendanceCheckOutService from "../service/attendanceCheckOutService.js"
 const register = async (req,res,next)=>{
     const user = req.user
     try{
-          const result = await attendanceCheckOutService.register(req.body,user,req)
+          const result = await attendanceCheckOutService.register(req.body,user)
           const successData = createSuccessResponse(result,"Register success")
           res.status(200).json({
             successData

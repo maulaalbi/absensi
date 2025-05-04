@@ -1,12 +1,12 @@
 import dayjs from "dayjs"
 import { prismaClient } from "../../../application/database.js"
 import { logger } from "../../../application/logger.js"
-import requestIp from 'request-ip';
+import bcrypt from "bcrypt";
 import { ResponseError } from "../../../error/responseError.js"
 import { registerValidation } from "../validation/attendanceValidation.js"
 
 
-const register = async (body,userData,req) => {
+const register = async (body,userData) => {
     const attendance = registerValidation.parse(body)
     const user = await prismaClient.user.findUnique({
         where: {
@@ -25,14 +25,11 @@ const register = async (body,userData,req) => {
         select : {
             id :true,
             barcode : true,
-            startTime:true
+            startTime:true,
+            ip:true
         }
     })
-    
-     const clientIp = requestIp.getClientIp(req); // Mendapatkan IP pengguna dari request
-        if (!clientIp) {
-            throw new Error('Unable to get client IP');
-        }
+
 
     const resultAttendance = await prismaClient.attendance.findFirst({
         where: {
@@ -46,12 +43,25 @@ const register = async (body,userData,req) => {
         }
     })
     
+     const checkOutCheck = await prismaClient.checkOut.count({
+            where : {
+                attendanceId : resultAttendance.id,
+                barcode : resultAttendance.globalScheduleId
+            }
+        })  
+        if(checkOutCheck >= 1){
+            throw new ResponseError(400,"User already check in")
+        }
+
+        if(attendance.ip !== globalSchedule.ip){
+            throw new ResponseError(400, "IP not match")
+        }
     
     const checkOut = await prismaClient.checkOut.create({
         data : {
             attendanceId : resultAttendance.id,
             barcode : resultAttendance.globalScheduleId,
-            ip : clientIp
+            ip : attendance.ip
 
         },
         select :{
