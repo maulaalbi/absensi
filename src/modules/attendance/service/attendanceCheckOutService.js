@@ -88,31 +88,6 @@ const register = async (body,userData) => {
     
 }
 
-// const attAll = async (body)=>{
-//     const result = await prismaClient.attendance.findMany({
-//         select : {
-//             userId : true,
-//             globalScheduleId : true,
-//             globalSchedule : {
-//                 select : {
-//                     startTime : true
-//                 }
-//             },
-//             checkIns: {
-//                 select:{
-//                     timestamp:true,
-//                     status : true
-//                 }
-//             }
-//         }
-//     })
-
-//     logger.info(
-//         `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
-//       );
-//     return result;
-// }
-
 const getCheckOutAll = async (body)=>{
     const result = await prismaClient.checkOut.findMany({
         select : {
@@ -142,13 +117,71 @@ const getCheckOutAll = async (body)=>{
         }
      })
 
+     if (result.length === 0) {
+        logger.info(
+            `[Service - get all check-out] No check-out found).`
+        );
+        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+    }
+
     logger.info(
-        `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
+        `[Service - get all checkout] Success get checkout with this data ${JSON.stringify(result)}`
       );
     return result;
 }
 
+const getCheckOutToday = async (body)=>{
+        const startOfDay = dayjs().startOf('day').toDate(); // Awal hari (00:00:00)
+        const endOfDay = dayjs().endOf('day').toDate();     // Akhir hari (23:59:59)
+    
+    const result = await prismaClient.checkOut.findMany({
+        where:{
+            createdAt : {
+                gte : startOfDay,
+                lte : endOfDay
+            }
+        },
+        select : {
+         ip : true,
+         timestamp : true,
+         status : true,
+         attendance : {
+             select :{
+                 att_public_id : true,
+                 globalSchedule:{
+                     select :{
+                         sch_public_id:true,
+                         day:true,
+                         startTime:true,
+                         barcode : true
+                     }
+                 },
+                 user :{
+                     select :{
+                         user_public_id:true,
+                         name:true
+                     }
+                 }
+             }
+         },
+         
+        }
+     })
+
+     if (result.length === 0) {
+        logger.info(
+            `[Service - get all check-out] No check-out found today).`
+        );
+        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+    }
+
+    logger.info(
+        `[Service - get checkout today] Success get checkout with this data ${JSON.stringify(result)}`
+      );
+    return result;
+}
 export default {
     register,
-    getCheckOutAll
+    getCheckOutAll,
+    getCheckOutToday
 }

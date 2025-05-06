@@ -120,6 +120,57 @@ const attAll = async (body)=>{
     return result;
 }
 
+const getAttByCheck = async (body) => {
+    const result = await prismaClient.attendance.findMany({
+      select : {
+        createdAt : true,
+        att_public_id: true,
+        checkIns:{
+            select :{
+                timestamp : true,
+                ip : true,
+                status : true
+            }
+        },
+        checkOuts : {
+            select : {
+                timestamp : true,
+                ip : true,
+                status : true
+            }
+        },
+        globalSchedule : {
+            select : {
+                sch_public_id : true,
+                day : true,
+                startTime : true,
+                barcode : true
+            }
+        },
+        user : {
+            select : {
+                user_public_id : true,
+                name : true
+            }
+        }
+      }
+    });
+
+    if (result.length === 0) {
+        logger.info(
+            `[Service - get att check-ins check-iout] No attendance found  .`
+        );
+        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+    }
+        
+
+    logger.info(
+        `[Service - get att by check] Success get att check-ins checkout with this data ${JSON.stringify(result)}`
+    );
+
+    return result;
+};
+
 const getCheckInAll = async (body)=>{
     const result = await prismaClient.checkIn.findMany({
        select : {
@@ -142,6 +193,20 @@ const getCheckInAll = async (body)=>{
                         user_public_id:true,
                         name:true
                     }
+                },
+                checkIns : {
+                    select :{
+                        timestamp :true,
+                        ip: true,
+                        status : true
+                    }
+                },
+                checkOuts : {
+                    select :{
+                        timestamp :true,
+                        ip: true,
+                        status : true
+                    }
                 }
             }
         },
@@ -150,7 +215,7 @@ const getCheckInAll = async (body)=>{
     })
 
     logger.info(
-        `[Service - get all schedule] Success get all att with this data ${JSON.stringify(result)}`
+        `[Service - get checkin all] Success get checkin all with this data ${JSON.stringify(result)}`
       );
     return result;
 }
@@ -193,8 +258,16 @@ const getCheckInToday = async (body) => {
         },
     });
 
+    if (result.length === 0) {
+        logger.info(
+            `[Service - get all check-ins] No check-ins found today (from ${startOfDay} to ${endOfDay}).`
+        );
+        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+    }
+        
+
     logger.info(
-        `[Service - get all check-ins] Success get all check-ins created today (from ${startOfDay} to ${endOfDay}) with this data: ${JSON.stringify(result)}`
+        `[Service - get check-ins today] Success get  check-ins today created today (from ${startOfDay} to ${endOfDay}) with this data: ${JSON.stringify(result)}`
     );
 
     return result;
@@ -207,5 +280,6 @@ export default {
     register,
     attAll,
     getCheckInAll,
-    getCheckInToday
+    getCheckInToday,
+    getAttByCheck
 }
