@@ -131,19 +131,29 @@ const getLastAtt = async (user)=>{
                 select:{
                     timestamp:true,
                     status:true,
-                    createdAt:true
                 }
             },
             checkOuts :{
                 select:{
                     timestamp:true,
                     status:true,
-                    createdAt:true
                 }
             },
             createdAt: true
         }
     })
+
+     if (lastAtt.length === 0) {
+            logger.info(
+                `[Service - get last att by user] No attendance found  .`
+            );
+            return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+        }
+            
+    
+        logger.info(
+            `[Service - get last att by user] Success get att by user with this data ${JSON.stringify(lastAtt)}`
+        );
 
     return lastAtt;
 }
@@ -188,19 +198,29 @@ const getAttByUser = async (user)=>{
                 select:{
                     timestamp:true,
                     status:true,
-                    createdAt:true
                 }
             },
             checkOuts :{
                 select:{
                     timestamp:true,
                     status:true,
-                    createdAt:true
                 }
             },
             createdAt: true
         }
     })
+
+    if (result.length === 0) {
+        logger.info(
+            `[Service - get att by user] No attendance found  .`
+        );
+        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+    }
+        
+
+    logger.info(
+        `[Service - get att by user] Success get att by user with this data ${JSON.stringify(result)}`
+    );
 
     return result;
 }
@@ -216,12 +236,5 @@ export default {
     getAttByUser
 }
 
-// const lastAbsensi = await prisma.absensi.findFirst({
-//     where: {
-//       userId: someUserId,
-//     },
-//     orderBy: {
-//       createdAt: 'desc',
-//     },
-//   });
+
   

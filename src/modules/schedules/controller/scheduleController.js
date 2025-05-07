@@ -33,7 +33,23 @@ const scheduleAll = async (req,res,next)=>{
       }
 }
 
+const scheduleToday = async (req,res,next)=>{
+  try{
+      const result = await scheduleService.getScheduleToday();
+      const successData = createSuccessResponse(result,"get schedule today success")
+      res.status(200).json({
+          successData
+      })
+  }catch(e){
+      res.status(e.statusCode || 400).json({
+        status: 'error',
+        message: e.message || 'Terjadi kesalahan',
+      })
+    }
+}
+
 export default {
     register,
-    scheduleAll
+    scheduleAll,
+    scheduleToday
 }

@@ -7,6 +7,7 @@ import QRCode from 'qrcode';
 import path from 'path';
 import fs from 'node:fs';
 import { mkdir } from 'node:fs/promises';
+import dayjs from "dayjs";
 
 
 
@@ -69,7 +70,8 @@ const getScheduleAll = async (body)=>{
         select : {
             day :true,
             startTime :true,
-            barcode :true
+            barcode :true,
+            ip :true
         }
     })
 
@@ -79,7 +81,40 @@ const getScheduleAll = async (body)=>{
     return scheduleAll;
 }
 
+const getScheduleToday = async (body)=>{
+      const startOfDay = dayjs().startOf('day').toDate(); // Awal hari (00:00:00)
+      const endOfDay = dayjs().endOf('day').toDate(); 
+  const scheduleAll = await prismaClient.globalSchedule.findMany({
+    where : {
+      createdAt: {
+        gte: startOfDay, // >= Awal hari
+        lte: endOfDay,   // <= Akhir hari
+    },
+    },
+      select : {
+          day :true,
+          startTime :true,
+          barcode :true,
+          ip :true
+      }
+  })
+
+  
+      if (scheduleAll.length === 0) {
+          logger.info(
+              `[Service - get schedule today] No schedule found today (from ${startOfDay} to ${endOfDay}).`
+          );
+          return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+      }
+
+  logger.info(
+      `[Service - get schedule today] Success get schedule today with this data ${JSON.stringify(scheduleAll)}`
+    );
+  return scheduleAll;
+}
+
 export default {
   register,
-  getScheduleAll
+  getScheduleAll,
+  getScheduleToday
 }

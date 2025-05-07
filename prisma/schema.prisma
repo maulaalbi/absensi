@@ -68,6 +68,7 @@ model GlobalSchedule {
   day        String       // Contoh: "Monday", "Tuesday"
   startTime  DateTime
   barcode    String       @unique // Ini yang dipakai untuk absensi
+  ip         String
   location   String?      // Misal: "Ruang A", opsional
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
