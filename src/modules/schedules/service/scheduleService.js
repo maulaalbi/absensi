@@ -5,9 +5,11 @@ import { prismaClient } from "../../../application/database.js";
 import { logger } from "../../../application/logger.js";
 import QRCode from 'qrcode';
 import path from 'path';
-import fs from 'node:fs';
-import { mkdir } from 'node:fs/promises';
+import { constants } from 'node:fs'
 import dayjs from "dayjs";
+import {google} from "googleapis";
+import { access, mkdir } from 'node:fs/promises';
+import fs from 'node:fs'; 
 
 
 
@@ -29,11 +31,12 @@ const register = async (body) => {
   // Generate UUID sebagai barcode
   schedule.barcode = uuid().toString();
 
-    // Ensure QR directory exists
-    const qrDir = path.resolve('qr-codes');
-    if (!fs.existsSync(qrDir)) {
-      await mkdir(qrDir);
-    }
+  const qrDir = path.resolve('qr-codes');
+  try {
+    await access(qrDir, constants.F_OK); // Cek apakah direktori ada
+  } catch (err) {
+    await mkdir(qrDir, { recursive: true }); // Jika tidak ada, buat direktori
+  }
   // Buat QR Code berdasarkan barcode
   const qrPath = path.resolve('qr-codes', `${schedule.barcode}.png`);
   try {
@@ -47,7 +50,54 @@ const register = async (body) => {
     throw new ResponseError(500, 'Failed to generate QR code');
   }
 
-  // Simpan ke database
+  const gd_folder_id = '1O27hxG5RjaCH4j1eEdqLx4SMk8t0dYaz';
+    const auth = new google.auth.GoogleAuth({
+        credentials :  {
+            "type": process.env.GOOGLE_DRIVE_TYPE,
+            "project_id": process.env.GOOGLE_DRIVE_PROJECT_ID,
+            "private_key_id": process.env.GOOGLE_DRIVE_PRIVATE_KEY_ID,
+            "private_key": process.env.GOOGLE_DRIVE_PRIVATE_KEY,
+            "client_email": process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
+            "client_id": process.env.GOOGLE_DRIVE_CLIENT_ID,
+            "auth_uri": process.env.GOOGLE_DRIVE_AUTH_URI,
+            "token_uri": process.env.GOOGLE_DRIVE_TOKEN_URI,
+            "auth_provider_x509_cert_url": process.env.GOOGLE_DRIVE_AUTH_PROVIDER,
+            "client_x509_cert_url": process.env.GOOGLE_DRIVE_AUTH_CLIENT_URI,
+            "universe_domain": process.env.GOOGLE_DRIVE_UNIVERSE_DOMAIN
+        },
+        scopes :   ['https://www.googleapis.com/auth/drive']
+    })
+
+    const driveService = google.drive({
+      version : 'v3',
+      auth 
+  })
+
+  const fileMetadata = {
+      'name' : `${schedule.barcode}.png`,
+      'parents' : [gd_folder_id]
+  }
+
+  const media = {
+      mimeType : "image/png",
+      body : fs.createReadStream(qrPath)
+  }
+
+  try{
+    const drivefile = await driveService.files.create({
+      requestBody : fileMetadata,
+      media : media,
+      fields : 'id'
+    })
+
+    const file_path= "https://drive.google.com/uc?id="+drivefile.data.id
+    schedule.barcode = file_path
+
+     
+  }catch(err){
+    throw new ResponseError(500, 'Failed to upload QR code to Google Drive');
+  }
+
   const result = await prismaClient.globalSchedule.create({
     data: schedule,
     select: {
@@ -62,6 +112,7 @@ const register = async (body) => {
   );
 
   return result;
+  
 };
 
 
