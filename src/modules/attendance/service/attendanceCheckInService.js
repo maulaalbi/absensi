@@ -72,6 +72,17 @@ const register = async (body,userData) => {
         })
       }
 
+      if (dayjs(checkIn.timestamp).isBefore(dayjs(globalSchedule.startTime))) {
+        await prismaClient.checkIn.update({
+          where: {
+            id: checkIn.id
+          },
+          data: {
+            status: "ON TIME",
+          },
+        })
+      }
+
       logger.info(
             `[Service - register] Success register attendance Check In with this data ${JSON.stringify(resultAttendance)} and check in ${JSON.stringify(checkIn)}`
         )
@@ -285,6 +296,16 @@ const sumCheck = async (body,user) => {
         },
     });
 
+    const late = await prismaClient.checkIn.count({
+        where: {
+            status: 'LATE',
+            attendance: {
+                user: {
+                    user_public_id: user // Kondisi berdasarkan user_public_id
+                },
+            },
+        },
+    });
 
     if (result.length === 0) {
         logger.info(
@@ -298,8 +319,72 @@ const sumCheck = async (body,user) => {
         `[Service - count checkin user] Success count check-ins  with this data: ${JSON.stringify(result)}`
     );
 
+    return {
+        totalAbsen : result,
+        late : late
+    };
+};
+
+const checkInByTime = async (user, { year, month }) => {
+    if (!year || !month) {
+        throw new Error("Parameter year and month are required.");
+    }
+
+    const buildDateRange = (year, month) => {
+        const start = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, 1)); // Awal bulan
+        const end = new Date(Date.UTC(parseInt(year), parseInt(month), 1)); // Awal bulan berikutnya
+        return { start, end };
+    };
+
+    const { start, end } = buildDateRange(year, month);
+
+    const result = await prismaClient.checkIn.findMany({
+        where: {
+            attendance: {
+                user: {
+                    user_public_id: user,
+                },
+            },
+            createdAt: {
+                gte: start,
+                lt: end, // Menggunakan `lt` agar end tidak termasuk
+            },
+        },
+        select: {
+            ip: true,
+            timestamp: true,
+            status: true,
+            attendance: {
+                select: {
+                    att_public_id: true,
+                    globalSchedule: {
+                        select: {
+                            sch_public_id: true,
+                            day: true,
+                            startTime: true,
+                            barcode: true,
+                        },
+                    },
+                    user: {
+                        select: {
+                            user_public_id: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    if (result.length === 0) {
+        logger.info("[Service - checkInByTime] No check-ins found.");
+        return null;
+    }
+
+    logger.info(`[Service - checkInByTime] Check-ins found: ${JSON.stringify(result)}`);
     return result;
 };
+
 
 
 
@@ -310,5 +395,6 @@ export default {
     getCheckInAll,
     getCheckInToday,
     getAttByCheck,
-    sumCheck
+    sumCheck,
+    checkInByTime
 }

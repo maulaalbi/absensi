@@ -92,11 +92,37 @@ const sumCheckIn = async (req,res,next)=>{
       })
     }
 }
+
+const checkInByTime = async (req, res, next) => {
+  const user = req.user;
+  const { year, month } = req.params;
+
+  // Validasi parameter
+  if (!year || !month) {
+      return res.status(400).json({
+          status: 'error',
+          message: 'Parameter year and month are required.',
+      });
+  }
+
+  try {
+      const result = await attendanceCheckInService.checkInByTime(user.user_public_id, { year, month });
+      const successData = createSuccessResponse(result, "get checkin by time success");
+      res.status(200).json(successData);
+  } catch (e) {
+      res.status(e.statusCode || 400).json({
+          status: 'error',
+          message: e.message || 'Terjadi kesalahan.',
+      });
+  }
+};
+
 export default {
     register,
     getAll,
     getCheckInAll,
     getCheckInToday,
     getAttByCheck,
-    sumCheckIn
+    sumCheckIn,
+    checkInByTime
 }
