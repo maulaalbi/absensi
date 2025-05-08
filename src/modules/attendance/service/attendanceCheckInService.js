@@ -33,6 +33,16 @@ const register = async (body,userData) => {
         throw new ResponseError(400, "IP not match")
     }
     
+    const checkAtt = await prismaClient.attendance.findFirst({
+        where : {
+            globalScheduleId : globalSchedule.barcode,
+            userId : user.user_public_id
+        }
+    })
+
+    if(checkAtt){
+        throw new ResponseError(400, "You already check in")
+    }
 
     const resultAttendance = await prismaClient.attendance.create({
         data: {

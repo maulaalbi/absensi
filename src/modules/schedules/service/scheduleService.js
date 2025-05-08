@@ -120,7 +120,8 @@ const getScheduleAll = async (body)=>{
             day :true,
             startTime :true,
             barcode :true,
-            ip :true
+            ip :true,
+            linkImg : true
         }
     })
 
