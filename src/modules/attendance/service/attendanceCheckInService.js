@@ -273,6 +273,34 @@ const getCheckInToday = async (body) => {
     return result;
 };
 
+const sumCheck = async (body,user) => {
+
+    const result = await prismaClient.checkIn.count({
+        where: {
+            attendance: {
+                user: {
+                    user_public_id: user // Kondisi berdasarkan user_public_id
+                },
+            },
+        },
+    });
+
+
+    if (result.length === 0) {
+        logger.info(
+            `[Service - count checkin user] count check-ins found.`
+        );
+        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+    }
+        
+
+    logger.info(
+        `[Service - count checkin user] Success count check-ins  with this data: ${JSON.stringify(result)}`
+    );
+
+    return result;
+};
+
 
 
 
@@ -281,5 +309,6 @@ export default {
     attAll,
     getCheckInAll,
     getCheckInToday,
-    getAttByCheck
+    getAttByCheck,
+    sumCheck
 }

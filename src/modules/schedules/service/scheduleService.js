@@ -12,9 +12,6 @@ import { access, mkdir } from 'node:fs/promises';
 import fs from 'node:fs'; 
 
 
-
-
-
 const register = async (body) => {
   const schedule = registerValidation.parse(body);
 
@@ -91,7 +88,7 @@ const register = async (body) => {
     })
 
     const file_path= "https://drive.google.com/uc?id="+drivefile.data.id
-    schedule.barcode = file_path
+    schedule.linkImg = file_path
 
      
   }catch(err){
@@ -103,7 +100,8 @@ const register = async (body) => {
     select: {
       day: true,
       startTime: true,
-      barcode: true
+      barcode: true,
+      linkImg: true
     }
   });
 

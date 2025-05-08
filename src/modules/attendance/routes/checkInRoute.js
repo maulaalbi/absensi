@@ -11,6 +11,7 @@ router.get('/getAll' , attendanceCheckInContorller.getAll );
 router.get('/getAttByCheck' , attendanceCheckInContorller.getAttByCheck );
 router.get('/getCheckIn' , attendanceCheckInContorller.getCheckInAll );
 router.get('/getCheckInToday' , attendanceCheckInContorller.getCheckInToday );
+router.get('/sumCheck' ,authMiddleware, attendanceCheckInContorller.sumCheckIn );
 
 
 export default router;
