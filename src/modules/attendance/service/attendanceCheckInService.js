@@ -33,6 +33,16 @@ const register = async (body,userData) => {
         throw new ResponseError(400, "IP not match")
     }
     
+    const checkAtt = await prismaClient.attendance.findFirst({
+        where : {
+            globalScheduleId : globalSchedule.barcode,
+            userId : user.user_public_id
+        }
+    })
+
+    if(checkAtt){
+        throw new ResponseError(400, "You already check in")
+    }
 
     const resultAttendance = await prismaClient.attendance.create({
         data: {
@@ -68,6 +78,17 @@ const register = async (body,userData) => {
           },
           data: {
             status: "LATE",
+          },
+        })
+      }
+
+      if (dayjs(checkIn.timestamp).isBefore(dayjs(globalSchedule.startTime))) {
+        await prismaClient.checkIn.update({
+          where: {
+            id: checkIn.id
+          },
+          data: {
+            status: "ON TIME",
           },
         })
       }
@@ -273,9 +294,58 @@ const getCheckInToday = async (body) => {
     return result;
 };
 
-const sumCheck = async (body,user) => {
+const checkInByTime = async (user, { year, month }) => {
+    if (!year || !month) {
+        throw new Error("Parameter year and month are required.");
+    }
 
-    const result = await prismaClient.checkIn.count({
+    const buildDateRange = (year, month) => {
+        const start = new Date(Date.UTC(parseInt(year), parseInt(month) - 1, 1)); // Awal bulan
+        const end = new Date(Date.UTC(parseInt(year), parseInt(month), 1)); // Awal bulan berikutnya
+        return { start, end };
+    };
+
+    const { start, end } = buildDateRange(year, month);
+
+    const result = await prismaClient.checkIn.findMany({
+        where: {
+            attendance: {
+                user: {
+                    user_public_id: user,
+                },
+            },
+            createdAt: {
+                gte: start,
+                lt: end, // Menggunakan `lt` agar end tidak termasuk
+            },
+        },
+        select: {
+            ip: true,
+            timestamp: true,
+            status: true,
+            attendance: {
+                select: {
+                    att_public_id: true,
+                    globalSchedule: {
+                        select: {
+                            sch_public_id: true,
+                            day: true,
+                            startTime: true,
+                            barcode: true,
+                        },
+                    },
+                    user: {
+                        select: {
+                            user_public_id: true,
+                            name: true,
+                        },
+                    },
+                },
+            },
+        },
+    });
+
+    const total = await prismaClient.checkIn.count({
         where: {
             attendance: {
                 user: {
@@ -285,21 +355,30 @@ const sumCheck = async (body,user) => {
         },
     });
 
+    const late = await prismaClient.checkIn.count({
+        where: {
+            status: 'LATE',
+            attendance: {
+                user: {
+                    user_public_id: user // Kondisi berdasarkan user_public_id
+                },
+            },
+        },
+    });
 
     if (result.length === 0) {
-        logger.info(
-            `[Service - count checkin user] count check-ins found.`
-        );
-        return null; // Atau kembalikan array kosong jika klien lebih familiar dengan format tersebut
+        logger.info("[Service - checkInByTime] No check-ins found.");
+        return null;
     }
-        
 
-    logger.info(
-        `[Service - count checkin user] Success count check-ins  with this data: ${JSON.stringify(result)}`
-    );
-
-    return result;
+    logger.info(`[Service - checkInByTime] Check-ins found: ${JSON.stringify(result)}`);
+    return{
+        total : total,
+        late : late,
+        data : result
+    };
 };
+
 
 
 
@@ -310,5 +389,5 @@ export default {
     getCheckInAll,
     getCheckInToday,
     getAttByCheck,
-    sumCheck
+    checkInByTime
 }
