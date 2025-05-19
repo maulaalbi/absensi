@@ -1,9 +1,13 @@
 // src/routes/user.routes.js
 import express from 'express';
 import authController from '../controller/authController.js';
+import adminController from '../controller/adminController.js';
 import authMiddleware from '../../../middleware/authMiddleware.js';
 
 const router = express.Router();
+
+router.post('/admin/login', adminController.login );
+router.post('/admin/getMe', adminController.getMe );
 
 router.post('/register', authController.register );
 router.post('/login', authController.login );

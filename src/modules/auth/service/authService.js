@@ -9,9 +9,8 @@ import { logger } from "../../../application/logger.js";
 
 
 const register = async (body) =>{
+   try{
     const user = registerValidation.parse(body)
-
-
     const countUser = await prismaClient.user.count({
         where : {
             email : user.email
@@ -36,10 +35,14 @@ const register = async (body) =>{
     )
 
     return result;
+   }catch(e){
+     throw new ResponseError(e.statusCode || 400,e.message || 'Terjadi kesalahan')
+   }
 }
 
 const login = async (request)=>{
-    const loginData = loginValidation.parse(request);
+    try{
+        const loginData = loginValidation.parse(request);
 
     const user = await prismaClient.user.findFirst({
       where: { email: loginData.email },
@@ -84,6 +87,9 @@ const login = async (request)=>{
       name : user.name,
       token,
     };
+    }catch(e){
+        throw new ResponseError(e.statusCode || 400,e.message || 'Terjadi kesalahan')
+    }
 }
 
 

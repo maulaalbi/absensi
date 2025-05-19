@@ -6,7 +6,8 @@ import { registerValidation } from "../validation/attendanceValidation.js"
 
 
 const register = async (body,userData) => {
-    const attendance = registerValidation.parse(body)
+    try{
+        const attendance = registerValidation.parse(body)
     const user = await prismaClient.user.findUnique({
         where: {
             id : userData.id,
@@ -98,6 +99,9 @@ const register = async (body,userData) => {
         )
 
     return resultAttendance;
+    }catch(e){
+        throw e
+    }
     
 }
 
